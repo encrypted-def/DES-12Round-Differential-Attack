@@ -11,10 +11,10 @@ const int SBOX[8][64] = {
   { 13, 1, 2, 15, 8, 13, 4, 8, 6, 10, 15, 3, 11, 7, 1, 4, 10, 12, 9, 5, 3, 6, 14, 11, 5, 0, 0, 14, 12, 9, 7, 2, 7, 2, 11, 1, 4, 14, 1, 7, 9, 4, 12, 10, 14, 8, 2, 13, 0, 15, 6, 12, 10, 9, 13, 0, 15, 3, 3, 5, 5, 6, 8, 11, }
 };
 int PC1[56] = { 56, 48, 40, 32, 24, 16, 8, 0, 57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 60, 52, 44, 36, 28, 20, 12, 4, 27, 19, 11, 3 };
-byte CipherOfNULLPlain[8]; // ³»°¡ ÅÃÇÑ key°¡ ¸Â¾Ò´ÂÁö È®ÀÎÇÏ±â À§ÇØ ÀÌ °ªÀ» ÂüÁ¶ÇÒ ¿¹Á¤
+byte CipherOfNULLPlain[8]; // ë‚´ê°€ íƒí•œ keyê°€ ë§ì•˜ëŠ”ì§€ í™•ì¸í•˜ê¸° ìœ„í•´ ì´ ê°’ì„ ì°¸ì¡°í•  ì˜ˆì •
 int diff_table[8][64][16];
 
-// diff tableÀ» °»½ÅÇÔ
+// diff tableì„ ê°±ì‹ í•¨
 void setDiffTable(void) {
   for (int idx = 0; idx < 8; idx++)
     for (int i = 0; i < 64; i++)
@@ -26,7 +26,7 @@ void setRandomKey(byte* KEY) {
   mt19937 rng(rd());
   uniform_int_distribution<int> dist1(0, 0xFF);
   for (int i = 0; i < 8; i++)
-        KEY[i] = dist1(rng) & 0xFE; // ¾îÂ÷ÇÇ °¢ ¹ÙÀÌÆ®ÀÇ ¸¶Áö¸· ºñÆ®´Â parityÀÌ¹Ç·Î 0À¸·Î ¸¸µë
+        KEY[i] = dist1(rng) & 0xFE; // ì–´ì°¨í”¼ ê° ë°”ì´íŠ¸ì˜ ë§ˆì§€ë§‰ ë¹„íŠ¸ëŠ” parityì´ë¯€ë¡œ 0ìœ¼ë¡œ ë§Œë“¬
 }
 void setRandomPlain(byte* P) {
   random_device rd;
@@ -36,23 +36,23 @@ void setRandomPlain(byte* P) {
     P[i] = dist1(rng);
 }
 void setPlainPool(byte* P_original, byte* P, int i) {
-  // iÀÇ 31-20¹øÂ° bit°¡ PÀÇ (1, 5), (8, 12, 15), (16, 17, 22, 23), (27, 29, 30) ¹øÂ° bit¿¡ µé¾î°¡¸é µÊ.
+  // iì˜ 31-20ë²ˆì§¸ bitê°€ Pì˜ (1, 5), (8, 12, 15), (16, 17, 22, 23), (27, 29, 30) ë²ˆì§¸ bitì— ë“¤ì–´ê°€ë©´ ë¨.
   for (int i = 0; i < 8; i++)
     P[i] = P_original[i];
-  P[0] ^= ((i & 1) << 6); i >>= 1; // iÀÇ ¸¶Áö¸· bit¸¦ PÀÇ 1¹øÂ° bit¿¡ XORÇÏ°í iÀÇ ¸¶Áö¸· bit¸¦ Á¦°Å
-  P[0] ^= ((i & 1) << 2); i >>= 1; // PÀÇ 5¹øÂ° bit   
-  P[1] ^= ((i & 1) << 7); i >>= 1; // PÀÇ 8¹øÂ° bit
-  P[1] ^= ((i & 1) << 3); i >>= 1; // PÀÇ 12¹øÂ° bit
-  P[1] ^= (i & 1); i >>= 1; // PÀÇ 15¹øÂ° bit
-  P[2] ^= ((i & 1) << 7); i >>= 1; // PÀÇ 16¹øÂ° bit
-  P[2] ^= ((i & 1) << 6); i >>= 1; // PÀÇ 17¹øÂ° bit
-  P[2] ^= ((i & 1) << 1); i >>= 1; // PÀÇ 22¹øÂ° bit
-  P[2] ^= (i & 1); i >>= 1; // PÀÇ 23¹øÂ° bit
-  P[3] ^= ((i & 1) << 4); i >>= 1; // PÀÇ 27¹øÂ° bit
-  P[3] ^= ((i & 1) << 2); i >>= 1; // PÀÇ 29¹øÂ° bit
-  P[3] ^= ((i & 1) << 1); // PÀÇ 30¹øÂ° bit
+  P[0] ^= ((i & 1) << 6); i >>= 1; // iì˜ ë§ˆì§€ë§‰ bitë¥¼ Pì˜ 1ë²ˆì§¸ bitì— XORí•˜ê³  iì˜ ë§ˆì§€ë§‰ bitë¥¼ ì œê±°
+  P[0] ^= ((i & 1) << 2); i >>= 1; // Pì˜ 5ë²ˆì§¸ bit   
+  P[1] ^= ((i & 1) << 7); i >>= 1; // Pì˜ 8ë²ˆì§¸ bit
+  P[1] ^= ((i & 1) << 3); i >>= 1; // Pì˜ 12ë²ˆì§¸ bit
+  P[1] ^= (i & 1); i >>= 1; // Pì˜ 15ë²ˆì§¸ bit
+  P[2] ^= ((i & 1) << 7); i >>= 1; // Pì˜ 16ë²ˆì§¸ bit
+  P[2] ^= ((i & 1) << 6); i >>= 1; // Pì˜ 17ë²ˆì§¸ bit
+  P[2] ^= ((i & 1) << 1); i >>= 1; // Pì˜ 22ë²ˆì§¸ bit
+  P[2] ^= (i & 1); i >>= 1; // Pì˜ 23ë²ˆì§¸ bit
+  P[3] ^= ((i & 1) << 4); i >>= 1; // Pì˜ 27ë²ˆì§¸ bit
+  P[3] ^= ((i & 1) << 2); i >>= 1; // Pì˜ 29ë²ˆì§¸ bit
+  P[3] ^= ((i & 1) << 1); // Pì˜ 30ë²ˆì§¸ bit
 }
-void setPlainBar(byte* P, byte* P_bar) { // 19 60 00 00À» PÀÇ right¿¡ XOR
+void setPlainBar(byte* P, byte* P_bar) { // 19 60 00 00ì„ Pì˜ rightì— XOR
   for (int i = 0; i < 8; i++)
     P_bar[i] = P[i];
   P_bar[4] = P[4] ^ 0x19;
@@ -64,7 +64,7 @@ void print_8byte(byte* P) {
   printf("\n");
 }
 
-// F ÇÔ¼öÀÇ Ãâ·Â O¿¡ ´ëÇØ idx¹øÂ° S-boxÀÇ Ãâ·Â °á°ú¸¦ ¹İÈ¯ (idx=1 to 8)
+// F í•¨ìˆ˜ì˜ ì¶œë ¥ Oì— ëŒ€í•´ idxë²ˆì§¸ S-boxì˜ ì¶œë ¥ ê²°ê³¼ë¥¼ ë°˜í™˜ (idx=1 to 8)
 // dir = 0 : left 4byte(0 to 3), dir = 1 : right 4byte(4 to 7)
 int getSboxOutputBit(byte Intermediate[8], int idx, int dir) {
   byte O[4] = { Intermediate[0 + 4 * dir], Intermediate[1 + 4 * dir], Intermediate[2 + 4 * dir], Intermediate[3 + 4 * dir] };
@@ -81,7 +81,7 @@ int getSboxOutputBit(byte Intermediate[8], int idx, int dir) {
   }
   return -1; // unreachable
 }
-// F ÇÔ¼öÀÇ ÀÔ·Â I¿¡ ´ëÇØ idx¹øÂ° S-boxÀÇ Ãâ·Â °á°ú¸¦ ¹İÈ¯ (idx=1 to 8)
+// F í•¨ìˆ˜ì˜ ì…ë ¥ Iì— ëŒ€í•´ idxë²ˆì§¸ S-boxì˜ ì¶œë ¥ ê²°ê³¼ë¥¼ ë°˜í™˜ (idx=1 to 8)
 // dir = 0 : left 4byte(0 to 3), dir = 1 : right 4byte(4 to 7)
 int getSboxInputBit(byte Intermediate[8], int idx, int dir) {
   byte I[4] = { Intermediate[0 + 4 * dir], Intermediate[1 + 4 * dir], Intermediate[2 + 4 * dir], Intermediate[3 + 4 * dir] };
@@ -101,7 +101,7 @@ int getSboxInputBit(byte Intermediate[8], int idx, int dir) {
 int ExtractBit() {
   return 0;
 }
-int** getSurvivingPair(byte P[][8], byte P_bar[][8], byte T[][8], byte T_bar[][8], int POOL_SIZE, int MAX_PAIR) { // surviving pairÀÇ index¸¦ ¹İÈ¯
+int** getSurvivingPair(byte P[][8], byte P_bar[][8], byte T[][8], byte T_bar[][8], int POOL_SIZE, int MAX_PAIR) { // surviving pairì˜ indexë¥¼ ë°˜í™˜
   int** pairlist = (int**)malloc(sizeof(int*) * MAX_PAIR);
   for (int i = 0; i < MAX_PAIR; i++)
     pairlist[i] = (int*)malloc(sizeof(int) * 2);
@@ -109,51 +109,51 @@ int** getSurvivingPair(byte P[][8], byte P_bar[][8], byte T[][8], byte T_bar[][8
     pairlist[i][0] = -1;
     pairlist[i][1] = -1;
   }
-  // S1, S2, S3ÀÇ output bit (8, 16, 22, 30), (12, 27, 1, 17), (23, 15, 29, 5)À» 0À¸·Î ¸¸µç 32ºñÆ® °ªÀ» ±âÁØÀ¸·Î Á¤·ÄÇØ collisionÀ» Ã£¾Æ³¾ ¿¹Á¤
-  // T, T_barÀÇ right¸¦ Á¶ÀÛÇÏ¸é µÊ.
-  vector<pair<int, int>> V(POOL_SIZE * 2); // (32ºñÆ® °ª, index)
+  // S1, S2, S3ì˜ output bit (8, 16, 22, 30), (12, 27, 1, 17), (23, 15, 29, 5)ì„ 0ìœ¼ë¡œ ë§Œë“  32ë¹„íŠ¸ ê°’ì„ ê¸°ì¤€ìœ¼ë¡œ ì •ë ¬í•´ collisionì„ ì°¾ì•„ë‚¼ ì˜ˆì •
+  // T, T_barì˜ rightë¥¼ ì¡°ì‘í•˜ë©´ ë¨.
+  vector<pair<int, int>> V(POOL_SIZE * 2); // (32ë¹„íŠ¸ ê°’, index)
   for (int i = 0; i < POOL_SIZE; i++) {
-    // PÀÇ (1, 5), (8, 12, 15), (16, 17, 22, 23), (27, 29, 30) ¹øÂ° bit¸¦ 0À¸·Î ¸¸µé¾î¾ßÇÔ
+    // Pì˜ (1, 5), (8, 12, 15), (16, 17, 22, 23), (27, 29, 30) ë²ˆì§¸ bitë¥¼ 0ìœ¼ë¡œ ë§Œë“¤ì–´ì•¼í•¨
     // 10111011(BB) 01110110(76) 00111100(3C) 11101001(E9)
     V[i] = { (((T[i][4] << 24) | (T[i][5] << 16) | (T[i][6] << 8) | T[i][7])) & 0xBB763CE9, i };
     V[i + POOL_SIZE] = { (((T_bar[i][4] << 24) | (T_bar[i][5] << 16) | (T_bar[i][6] << 8) | T_bar[i][7])) & 0xBB763CE9, i + POOL_SIZE };
   }
   sort(V.begin(), V.end());
-  int pairlist_idx = 0; // ´ÙÀ½¹ø¿¡ »ğÀÔÇÒ pairlistÀÇ index
-  for (int i = 0; i < 2 * POOL_SIZE - 1; i++) { // V[i], V[i+1]ÀÇ first°¡ µ¿ÀÏÇÑÁö È®ÀÎÇÒ ¿¹Á¤. first°¡ µ¿ÀÏÇÑ°Ô 3°³ ÀÌ»óÀÌ¸é ¸ğµç °æ¿ì¸¦ Æ÷ÇÔÇÏÁö ¸øÇÒ ¼ö ÀÖÁö¸¸ ³Ê¹«³ª ºó¾àÇÑ È®·ü·Î µîÀåÇÒ ÀÏÀÌ±â ¶§¹®¿¡ ±×³É ¹«½Ã
-    if (V[i].first == V[i + 1].first && V[i].second < POOL_SIZE && V[i + 1].second >= POOL_SIZE) { // V[i]´Â T¿¡ ¼ÓÇØÀÖ°í V[i+1]Àº T_bar¿¡ ¼ÓÇØÀÖ¾î¾ßÇÏ¹Ç·Î Ãß°¡µÈ Á¶°Ç
-                                                     // ÀÌÁ¦ R1,11,12¿¡¼­ÀÇ S-boxÀÇ Â÷ºĞÀ» »ìÆìº¸¾Æ ½ÇÁ¦·Î °¡´ÉÇÑ Â÷ºĞÀÎÁö È®ÀÎ. ÀÌ ¶§ È®·ü¿¡ 0.0745°¡ °öÇØÁö¸é¼­ 1.19°³ÀÇ pair¸¸ »ì¾Æ³²À½
-                                                     // 1. R1¿¡¼­ S1,S2,S3ÀÇ Â÷ºĞÀÌ ½ÇÁ¦·Î °¡´ÉÇÑ Â÷ºĞÀÎÁö diff_table·Î È®ÀÎ
-                                                     // R1ÀÇ input Â÷ºĞÀº 00011001(19) 01100000(60) 00000000 00000000 
-                                                     // S1ÀÇ input Â÷ºĞ : 000011
-                                                     // S2ÀÇ input Â÷ºĞ : 110010
-                                                     // S3ÀÇ input Â÷ºĞ : 101100
-      int idx0 = V[i].second; // P¿¡ ´ëÀÀµÇ´Â index
-      int idx1 = V[i + 1].second - POOL_SIZE; // P_bar¿¡ ´ëÀÀµÇ´Â index
+  int pairlist_idx = 0; // ë‹¤ìŒë²ˆì— ì‚½ì…í•  pairlistì˜ index
+  for (int i = 0; i < 2 * POOL_SIZE - 1; i++) { // V[i], V[i+1]ì˜ firstê°€ ë™ì¼í•œì§€ í™•ì¸í•  ì˜ˆì •. firstê°€ ë™ì¼í•œê²Œ 3ê°œ ì´ìƒì´ë©´ ëª¨ë“  ê²½ìš°ë¥¼ í¬í•¨í•˜ì§€ ëª»í•  ìˆ˜ ìˆì§€ë§Œ ë„ˆë¬´ë‚˜ ë¹ˆì•½í•œ í™•ë¥ ë¡œ ë“±ì¥í•  ì¼ì´ê¸° ë•Œë¬¸ì— ê·¸ëƒ¥ ë¬´ì‹œ
+    if (V[i].first == V[i + 1].first && V[i].second < POOL_SIZE && V[i + 1].second >= POOL_SIZE) { // V[i]ëŠ” Tì— ì†í•´ìˆê³  V[i+1]ì€ T_barì— ì†í•´ìˆì–´ì•¼í•˜ë¯€ë¡œ ì¶”ê°€ëœ ì¡°ê±´
+                                                     // ì´ì œ R1,11,12ì—ì„œì˜ S-boxì˜ ì°¨ë¶„ì„ ì‚´í´ë³´ì•„ ì‹¤ì œë¡œ ê°€ëŠ¥í•œ ì°¨ë¶„ì¸ì§€ í™•ì¸. ì´ ë•Œ í™•ë¥ ì— 0.0745ê°€ ê³±í•´ì§€ë©´ì„œ 1.19ê°œì˜ pairë§Œ ì‚´ì•„ë‚¨ìŒ
+                                                     // 1. R1ì—ì„œ S1,S2,S3ì˜ ì°¨ë¶„ì´ ì‹¤ì œë¡œ ê°€ëŠ¥í•œ ì°¨ë¶„ì¸ì§€ diff_tableë¡œ í™•ì¸
+                                                     // R1ì˜ input ì°¨ë¶„ì€ 00011001(19) 01100000(60) 00000000 00000000 
+                                                     // S1ì˜ input ì°¨ë¶„ : 000011
+                                                     // S2ì˜ input ì°¨ë¶„ : 110010
+                                                     // S3ì˜ input ì°¨ë¶„ : 101100
+      int idx0 = V[i].second; // Pì— ëŒ€ì‘ë˜ëŠ” index
+      int idx1 = V[i + 1].second - POOL_SIZE; // P_barì— ëŒ€ì‘ë˜ëŠ” index
       byte P_diff[8];
       byte C_diff[8];
       for (int i = 0; i < 8; i++) {
         P_diff[i] = P[idx0][i] ^ P_bar[idx1][i];
         C_diff[i] = T[idx0][i] ^ T_bar[idx1][i];
       }
-      if (diff_table[0][0x03][getSboxOutputBit(P_diff, 1, 0)] == 0) // S1ÀÇ 0x03¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      if (diff_table[0][0x03][getSboxOutputBit(P_diff, 1, 0)] == 0) // S1ì˜ 0x03ì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
-      if (diff_table[1][0x32][getSboxOutputBit(P_diff, 2, 0)] == 0) // S2ÀÇ 0x32¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      if (diff_table[1][0x32][getSboxOutputBit(P_diff, 2, 0)] == 0) // S2ì˜ 0x32ì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
-      if (diff_table[2][0x2c][getSboxOutputBit(P_diff, 3, 0)] == 0) // S3ÀÇ 0x2c¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      if (diff_table[2][0x2c][getSboxOutputBit(P_diff, 3, 0)] == 0) // S3ì˜ 0x2cì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
-      // 2. R11¿¡¼­ S1, S2, S3ÀÇ Â÷ºĞÀÌ ½ÇÁ¦·Î °¡´ÉÇÑ Â÷ºĞÀÎÁö diff_table·Î È®ÀÎ. R15¿¡¼­ S1, S2, S3ÀÇ output Â÷ºĞÀº CipherÀÇ right
-      if (diff_table[0][0x03][getSboxOutputBit(C_diff, 1, 1)] == 0) // S1ÀÇ 0x03¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      // 2. R11ì—ì„œ S1, S2, S3ì˜ ì°¨ë¶„ì´ ì‹¤ì œë¡œ ê°€ëŠ¥í•œ ì°¨ë¶„ì¸ì§€ diff_tableë¡œ í™•ì¸. R15ì—ì„œ S1, S2, S3ì˜ output ì°¨ë¶„ì€ Cipherì˜ right
+      if (diff_table[0][0x03][getSboxOutputBit(C_diff, 1, 1)] == 0) // S1ì˜ 0x03ì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
-      if (diff_table[1][0x32][getSboxOutputBit(C_diff, 2, 1)] == 0) // S2ÀÇ 0x32¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      if (diff_table[1][0x32][getSboxOutputBit(C_diff, 2, 1)] == 0) // S2ì˜ 0x32ì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
-      if (diff_table[2][0x2c][getSboxOutputBit(C_diff, 3, 1)] == 0) // S3ÀÇ 0x2c¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      if (diff_table[2][0x2c][getSboxOutputBit(C_diff, 3, 1)] == 0) // S3ì˜ 0x2cì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
-      // 3. R12¿¡¼­ S1-S8ÀÇ Â÷ºĞÀÌ ½ÇÁ¦·Î °¡´ÉÇÑ Â÷ºĞÀÎÁö diff_table·Î È®ÀÎ
-      // C_diff[0~3]¿¡ 19(0001 1001) 60(0110 0000) 00 00À» XORÇÑ °ÍÀÌ F ÇÔ¼öÀÇ Ãâ·ÂÀÌ´Ù.
+      // 3. R12ì—ì„œ S1-S8ì˜ ì°¨ë¶„ì´ ì‹¤ì œë¡œ ê°€ëŠ¥í•œ ì°¨ë¶„ì¸ì§€ diff_tableë¡œ í™•ì¸
+      // C_diff[0~3]ì— 19(0001 1001) 60(0110 0000) 00 00ì„ XORí•œ ê²ƒì´ F í•¨ìˆ˜ì˜ ì¶œë ¥ì´ë‹¤.
       C_diff[0] ^= 0x19;
       C_diff[1] ^= 0x60;
-      if (diff_table[0][getSboxInputBit(C_diff, 1, 1)][getSboxOutputBit(C_diff, 1, 0)] == 0) // S1ÀÇ input¿¡ ´ëÇØ P_diff°¡ ºÒ°¡´ÉÇÑ Â÷ºĞÀÏ °æ¿ì
+      if (diff_table[0][getSboxInputBit(C_diff, 1, 1)][getSboxOutputBit(C_diff, 1, 0)] == 0) // S1ì˜ inputì— ëŒ€í•´ P_diffê°€ ë¶ˆê°€ëŠ¥í•œ ì°¨ë¶„ì¼ ê²½ìš°
         continue;
       if (diff_table[1][getSboxInputBit(C_diff, 2, 1)][getSboxOutputBit(C_diff, 2, 0)] == 0)
         continue;
@@ -171,12 +171,12 @@ int** getSurvivingPair(byte P[][8], byte P_bar[][8], byte T[][8], byte T_bar[][8
 
       if (diff_table[7][getSboxInputBit(C_diff, 8, 1)][getSboxOutputBit(C_diff, 8, 0)] == 0)
         continue;
-      // ÀÌ ¸ğµç filteringÀ» Åë°úÇß´Ù¸é
+      // ì´ ëª¨ë“  filteringì„ í†µê³¼í–ˆë‹¤ë©´
       pairlist[pairlist_idx][0] = idx0;
       pairlist[pairlist_idx][1] = idx1;
-      pairlist_idx++; // pairlist¿¡ Ãß°¡
-      if (pairlist_idx == MAX_PAIR) // ¸¸¾à MAX_PAIR°³¿¡ µµ´ŞÇßÀ¸¸é
-        return pairlist; // ±×³É ¹İÈ¯
+      pairlist_idx++; // pairlistì— ì¶”ê°€
+      if (pairlist_idx == MAX_PAIR) // ë§Œì•½ MAX_PAIRê°œì— ë„ë‹¬í–ˆìœ¼ë©´
+        return pairlist; // ê·¸ëƒ¥ ë°˜í™˜
     }
   }
   return pairlist;
@@ -187,9 +187,9 @@ int DC_structure(unsigned int* key) {
   int cnt = 0;
   const int POOL_SIZE = 4096;
   byte P_arbitrary[8] = { 0x2C, 0x2F, 0x45, 0xE3, 0x26, 0xBC, 0xF9, 0xA1};
-  setRandomPlain(P_arbitrary); // ÀÓÀÇ·Î P_arbitrary¸¦ ÅÃÇÔ
-  byte P[POOL_SIZE][8]; // P_arbitrary¿¡¼­ S1, S2, S3ÀÇ output bit¸¦ 0x000ºÎÅÍ 0xFFF±îÁö ¹Ù²Û PlainÀÌ µé¾î°¨
-  byte P_bar[POOL_SIZE][8]; // P[i]¿¡ (00 00 00 00 19 60 00 00)À» XORÇÑ Plain
+  setRandomPlain(P_arbitrary); // ì„ì˜ë¡œ P_arbitraryë¥¼ íƒí•¨
+  byte P[POOL_SIZE][8]; // P_arbitraryì—ì„œ S1, S2, S3ì˜ output bitë¥¼ 0x000ë¶€í„° 0xFFFê¹Œì§€ ë°”ê¾¼ Plainì´ ë“¤ì–´ê°
+  byte P_bar[POOL_SIZE][8]; // P[i]ì— (00 00 00 00 19 60 00 00)ì„ XORí•œ Plain
   for (int i = 0; i < POOL_SIZE; i++) {
     setPlainPool(P_arbitrary, P[i], i);
     setPlainBar(P[i], P_bar[i]);
@@ -200,22 +200,22 @@ int DC_structure(unsigned int* key) {
     DES(key, P[i], T[i]);
     DES(key, P_bar[i], T_bar[i]);
   }
-  // S4-S8ÀÇ output bitÀÇ Â÷ºĞÀÌ 0ÀÌ¾î¾ß right keyÀÏ °¡´É¼ºÀÌ ÀÖÀ½
+  // S4-S8ì˜ output bitì˜ ì°¨ë¶„ì´ 0ì´ì–´ì•¼ right keyì¼ ê°€ëŠ¥ì„±ì´ ìˆìŒ
   const int MAX_PAIR = 10;
 
-  int** survivePair = getSurvivingPair(P, P_bar, T, T_bar, POOL_SIZE, MAX_PAIR); // (idx0, idx1) pair°¡ ¹İÈ¯µÊ
+  int** survivePair = getSurvivingPair(P, P_bar, T, T_bar, POOL_SIZE, MAX_PAIR); // (idx0, idx1) pairê°€ ë°˜í™˜ë¨
   for (int i = 0; i < MAX_PAIR; i++) {
     int idx0 = survivePair[i][0];
     int idx1 = survivePair[i][1];
     if (idx0 == -1)
       break;
-    // R1ÀÇ input Â÷ºĞÀº 00011001(19) 01100000(60) 00000000 00000000 
-    // S1ÀÇ input Â÷ºĞ : 000011
-    // S2ÀÇ input Â÷ºĞ : 110010
-    // S3ÀÇ input Â÷ºĞ : 101100
-    // ÇØ´çÇÏ´Â pair¿¡ ´ëÀÀµÇ´Â key¸¦ Ã£¾Æ right keyÀÎÁö È®ÀÎÇÒ °ÍÀÓ
-    bool keybit[56] = { 0, }; // PC1À» °ÅÄ£ »óÅÂÀÇ Å°
-                  // Round1 S3 ºÎÅÍ ½ÃÀÛ. (23 19 12 4 26 8)
+    // R1ì˜ input ì°¨ë¶„ì€ 00011001(19) 01100000(60) 00000000 00000000 
+    // S1ì˜ input ì°¨ë¶„ : 000011
+    // S2ì˜ input ì°¨ë¶„ : 110010
+    // S3ì˜ input ì°¨ë¶„ : 101100
+    // í•´ë‹¹í•˜ëŠ” pairì— ëŒ€ì‘ë˜ëŠ” keyë¥¼ ì°¾ì•„ right keyì¸ì§€ í™•ì¸í•  ê²ƒì„
+    bool keybit[56] = { 0, }; // PC1ì„ ê±°ì¹œ ìƒíƒœì˜ í‚¤
+                  // Round1 S3 ë¶€í„° ì‹œì‘. (23 19 12 4 26 8)
 
     for (int r1s3 = 0; r1s3 < 64; r1s3++) {
 
@@ -234,7 +234,7 @@ int DC_structure(unsigned int* key) {
       int expected_R1S3_output_XOR = getSboxOutputBit(P[idx0], 3, 0) ^ getSboxOutputBit(P_bar[idx1], 3, 0);
       if (R1S3_output_XOR != expected_R1S3_output_XOR)
         continue;
-      // output XORÀÌ ÀÏÄ¡ÇÑ´Ù¸é ÀÌÁ¦ Round12 S4·Î ³Ñ¾î°¨.(8 27 19 12 5 22) 27 5 22À» Á¤ÇØ¾ßÇÔ
+      // output XORì´ ì¼ì¹˜í•œë‹¤ë©´ ì´ì œ Round12 S4ë¡œ ë„˜ì–´ê°.(8 27 19 12 5 22) 27 5 22ì„ ì •í•´ì•¼í•¨
       for (int r12s4 = 0; r12s4 < 8; r12s4++) {
         keybit[27] = (r12s4 & 0x04) >> 2;
         keybit[5] = (r12s4 & 0x02) >> 1;
@@ -245,10 +245,10 @@ int DC_structure(unsigned int* key) {
         int R12S4_output1 = SBOX[3][R12S4_input1 ^ R12S4_key];
         int R12S4_output2 = SBOX[3][R12S4_input2 ^ R12S4_key];
         int R12S4_output_XOR = SBOX[3][R12S4_input1 ^ R12S4_key] ^ SBOX[3][R12S4_input2 ^ R12S4_key];
-        int expected_R12S4_output_XOR = getSboxOutputBit(T[idx0], 4, 0) ^ getSboxOutputBit(T_bar[idx1], 4, 0) ^ 0x2; // (19 60 00 00ÀÌ XORµÇ¾î¼­ Ãâ·Â diffÀÇ 9¹øÂ° MSB = S4ÀÇ 2¹øÂ° MSB°¡ ´Ş¶óÁö°Ô µÊ
+        int expected_R12S4_output_XOR = getSboxOutputBit(T[idx0], 4, 0) ^ getSboxOutputBit(T_bar[idx1], 4, 0) ^ 0x2; // (19 60 00 00ì´ XORë˜ì–´ì„œ ì¶œë ¥ diffì˜ 9ë²ˆì§¸ MSB = S4ì˜ 2ë²ˆì§¸ MSBê°€ ë‹¬ë¼ì§€ê²Œ ë¨
         if (R12S4_output_XOR != expected_R12S4_output_XOR)      
           continue;       
-        //ROUND12 S2(23 20 7 26 13 2) 20 7 13 2¸¦ Á¤ÇØ¾ßÇÔ
+        //ROUND12 S2(23 20 7 26 13 2) 20 7 13 2ë¥¼ ì •í•´ì•¼í•¨
         for (int r12s2 = 0; r12s2 < 16; r12s2++) {
           keybit[20] = (r12s2 & 0x08) >> 3;
           keybit[7] = (r12s2 & 0x04) >> 2;
@@ -264,7 +264,7 @@ int DC_structure(unsigned int* key) {
           if (R12S2_output_XOR != expected_R12S2_output_XOR)
             continue;
 
-          //ROUND1 S2(3 0 15 6 21 10). ¸ğµç ºñÆ®¸¦ ´Ù Á¤ÇØ¾ßµÊ
+          //ROUND1 S2(3 0 15 6 21 10). ëª¨ë“  ë¹„íŠ¸ë¥¼ ë‹¤ ì •í•´ì•¼ë¨
           for (int r1s2 = 0; r1s2 < 64; r1s2++) {
             keybit[3] = (r1s2 & 0x20) >> 5;
             keybit[0] = (r1s2 & 0x10) >> 4;
@@ -294,7 +294,7 @@ int DC_structure(unsigned int* key) {
               int expected_R12S1_output_XOR = getSboxOutputBit(T[idx0], 1, 0) ^ getSboxOutputBit(T_bar[idx1], 1, 0);
               if (R12S1_output_XOR != expected_R12S1_output_XOR)
                 continue;
-              //ROUND12 S3(15 11 4 24 18 0), 11 24 18À» Á¤ÇØ¾ßµÊ
+              //ROUND12 S3(15 11 4 24 18 0), 11 24 18ì„ ì •í•´ì•¼ë¨
               for (int r12s3 = 0; r12s3 < 8; r12s3++) {
                 keybit[11] = (r12s3 & 0x04) >> 2;
                 keybit[24] = (r12s3 & 0x02) >> 1;
@@ -309,7 +309,7 @@ int DC_structure(unsigned int* key) {
                 if (R12S3_output_XOR != expected_R12S3_output_XOR)
                   continue;
 
-                //ROUND1 S1(14 17 11 24 1 5), 14 17 1À» Á¤ÇØ¾ßµÊ
+                //ROUND1 S1(14 17 11 24 1 5), 14 17 1ì„ ì •í•´ì•¼ë¨
                 for (int r1s1 = 0; r1s1 < 8; r1s1++) {
                   keybit[14] = (r1s1 & 0x04) >> 2;
                   keybit[17] = (r1s1 & 0x02) >> 1;
@@ -324,11 +324,11 @@ int DC_structure(unsigned int* key) {
                   if (R1S1_output_XOR != expected_R1S1_output_XOR)
                     continue;
 
-                  // ¿©±â±îÁö Åë°úÇßÀ¸¸é ÀÏ´Ü expected XORÀº ´Ù Á¦´ë·Î ³ª¿È. left key´Â ´Ù º¹¿øÇÑ »óÅÂ.
-                  // ÀÌÁ¦ right key¸¦ Ã£¾Æ³¾ °ÍÀÓ
+                  // ì—¬ê¸°ê¹Œì§€ í†µê³¼í–ˆìœ¼ë©´ ì¼ë‹¨ expected XORì€ ë‹¤ ì œëŒ€ë¡œ ë‚˜ì˜´. left keyëŠ” ë‹¤ ë³µì›í•œ ìƒíƒœ.
+                  // ì´ì œ right keyë¥¼ ì°¾ì•„ë‚¼ ê²ƒì„
                   // R11S1_input1 ^ R11S1_input2 = 0x03
-                  // ³»°¡ P[idx0]¿¡ ´ëÇÑ input value¸¦ Á¤ÇÏ¸é P_bar[idx1]¿¡ ´ëÇÑ input value¶ÇÇÑ Á¤ÇØÁö°í, S1-S4¿¡ ´ëÇÑ key´Â ¾Æ´Ï±î output value°¡ ±â´ëÇÑ XOR°ªÀÌ ³ª¿À´ÂÁö È®ÀÎ °¡´É
-                  // Permutation S1 : 24 15 6 19 20 28, 24 19 20 28 °ªÀ» ÀÓÀÇ·Î Á¤ÇØ¾ß ÇÔ
+                  // ë‚´ê°€ P[idx0]ì— ëŒ€í•œ input valueë¥¼ ì •í•˜ë©´ P_bar[idx1]ì— ëŒ€í•œ input valueë˜í•œ ì •í•´ì§€ê³ , S1-S4ì— ëŒ€í•œ keyëŠ” ì•„ë‹ˆê¹Œ output valueê°€ ê¸°ëŒ€í•œ XORê°’ì´ ë‚˜ì˜¤ëŠ”ì§€ í™•ì¸ ê°€ëŠ¥
+                  // Permutation S1 : 24 15 6 19 20 28, 24 19 20 28 ê°’ì„ ì„ì˜ë¡œ ì •í•´ì•¼ í•¨
                   bool I12_input1[32] = { 0, };
                   bool I12_input2[32] = { 0, };
                   for (int r11s1 = 0; r11s1 < 16; r11s1++) {
@@ -352,8 +352,8 @@ int DC_structure(unsigned int* key) {
                     I12_input2[19] = (t & 0x04) >> 2;
                     I12_input2[20] = (t & 0x02) >> 1;
                     I12_input2[28] = t & 0x01;
-                    // Round11 S2¿¡¼­ input XORÀº 0x32ÀÌ´Ù.
-                    // Permutation S2 : 20 28 11 27 16 0, 27 16 °ªÀ» ÀÓÀÇ·Î Á¤ÇØ¾ß ÇÔ
+                    // Round11 S2ì—ì„œ input XORì€ 0x32ì´ë‹¤.
+                    // Permutation S2 : 20 28 11 27 16 0, 27 16 ê°’ì„ ì„ì˜ë¡œ ì •í•´ì•¼ í•¨
                     for (int r11s2 = 0; r11s2 < 4; r11s2++) {
                       int R11S2_key = (int)keybit[21] << 5 | (int)keybit[18] << 4 | (int)keybit[5] << 3 | (int)keybit[24] << 2 | (int)keybit[11] << 1 | (int)keybit[0];
                       int i3 = R12S3_output1 & 0x01;
@@ -371,8 +371,8 @@ int DC_structure(unsigned int* key) {
                       int t = R11S2_input2 ^ getSboxInputBit(T_bar[idx1], 2, 0);
                       I12_input2[27] = (t & 0x04) >> 2;
                       I12_input2[16] = (t & 0x02) >> 1;
-                      // Round11 S3¿¡¼­ input XORÀº 0x2cÀÌ´Ù.
-                      // Permutation S3 : 16 0 14 22 25 4, 22 25 °ªÀ» ÀÓÀÇ·Î Á¤ÇØ¾ß ÇÔ
+                      // Round11 S3ì—ì„œ input XORì€ 0x2cì´ë‹¤.
+                      // Permutation S3 : 16 0 14 22 25 4, 22 25 ê°’ì„ ì„ì˜ë¡œ ì •í•´ì•¼ í•¨
                       for (int r11s3 = 0; r11s3 < 4; r11s3++) {
                         int R11S3_key = (int)keybit[13] << 5 | (int)keybit[9] << 4 | (int)keybit[2] << 3 | (int)keybit[22] << 2 | (int)keybit[16] << 1 | (int)keybit[26];
                         int i2 = (R12S1_output1 & 0x08) >> 3;
@@ -392,10 +392,10 @@ int DC_structure(unsigned int* key) {
                         I12_input2[22] = (t & 0x04) >> 2;
                         I12_input2[25] = (t & 0x02) >> 1;
 
-                        // Round12 S5¿¡¼­ keybit(33 44 51 29 39 47)À» ÅÃÇÏ°í output value¸¦ ÃæÁ·ÇÏ´ÂÁö È®ÀÎ
-                        // output bit´Â 16 17 18 19ÀÌ°í 16 19´Â °ªÀ» ¾Ë°íÀÖÀ½
+                        // Round12 S5ì—ì„œ keybit(33 44 51 29 39 47)ì„ íƒí•˜ê³  output valueë¥¼ ì¶©ì¡±í•˜ëŠ”ì§€ í™•ì¸
+                        // output bitëŠ” 16 17 18 19ì´ê³  16 19ëŠ” ê°’ì„ ì•Œê³ ìˆìŒ
                         for (int r12s5 = 0; r12s5 < 64; r12s5++) {
-                          keybit[31] = (r12s5 & 0x20) >> 5;
+                          keybit[33] = (r12s5 & 0x20) >> 5;
                           keybit[44] = (r12s5 & 0x10) >> 4;
                           keybit[51] = (r12s5 & 0x08) >> 3;
                           keybit[29] = (r12s5 & 0x04) >> 2;
@@ -404,9 +404,9 @@ int DC_structure(unsigned int* key) {
                           int R12S5_key = r12s5;
                           int R12S5_input1 = getSboxInputBit(T[idx0], 5, 1);
                           int R12S5_input2 = getSboxInputBit(T_bar[idx1], 5, 1);
-                          if ((SBOX[4][R12S5_input1 ^ R12S5_key] & 0x09) != ((int)I12_input1[16] << 3 | (int)I12_input1[19])) // °¡¿îµ¥ µÎ bit´Â unknownÀÌ¹Ç·Î.
+                          if ((SBOX[4][R12S5_input1 ^ R12S5_key] & 0x09) != ((int)I12_input1[16] << 3 | (int)I12_input1[19])) // ê°€ìš´ë° ë‘ bitëŠ” unknownì´ë¯€ë¡œ.
                             continue;
-                          if ((SBOX[4][R12S5_input2 ^ R12S5_key] & 0x09) != ((int)I12_input2[16] << 3 | (int)I12_input2[19])) // °¡¿îµ¥ µÎ bit´Â unknownÀÌ¹Ç·Î.
+                          if ((SBOX[4][R12S5_input2 ^ R12S5_key] & 0x09) != ((int)I12_input2[16] << 3 | (int)I12_input2[19])) // ê°€ìš´ë° ë‘ bitëŠ” unknownì´ë¯€ë¡œ.
                             continue;
                           int t = SBOX[4][R12S5_input1 ^ R12S5_key];
                           I12_input1[17] = (t & 0x04) >> 2;
@@ -415,8 +415,8 @@ int DC_structure(unsigned int* key) {
                           I12_input2[17] = (t & 0x04) >> 2;
                           I12_input2[18] = (t & 0x02) >> 1;
 
-                          // Round12 S6¿¡¼­ keybit(50 32 43 37 53 40)À» ÅÃÇÏ°í output value¸¦ ÃæÁ·ÇÏ´ÂÁö È®ÀÎ
-                          // output bit´Â 20 21 22 23ÀÌ°í 20 22Àº °ªÀ» ¾Ë°íÀÖÀ½ 
+                          // Round12 S6ì—ì„œ keybit(50 32 43 37 53 40)ì„ íƒí•˜ê³  output valueë¥¼ ì¶©ì¡±í•˜ëŠ”ì§€ í™•ì¸
+                          // output bitëŠ” 20 21 22 23ì´ê³  20 22ì€ ê°’ì„ ì•Œê³ ìˆìŒ 
                           for (int r12s6 = 0; r12s6 < 64; r12s6++) {
                             keybit[50] = (r12s6 & 0x20) >> 5;
                             keybit[32] = (r12s6 & 0x10) >> 4;
@@ -427,9 +427,9 @@ int DC_structure(unsigned int* key) {
                             int R12S6_key = r12s6;
                             int R12S6_input1 = getSboxInputBit(T[idx0], 6, 1);
                             int R12S6_input2 = getSboxInputBit(T_bar[idx1], 6, 1);
-                            if ((SBOX[5][R12S6_input1 ^ R12S6_key] & 0x0A) != ((int)I12_input1[20] << 3 | (int)I12_input1[22] << 1)) // °¡¿îµ¥ µÎ bit´Â unknownÀÌ¹Ç·Î.
+                            if ((SBOX[5][R12S6_input1 ^ R12S6_key] & 0x0A) != ((int)I12_input1[20] << 3 | (int)I12_input1[22] << 1)) // ê°€ìš´ë° ë‘ bitëŠ” unknownì´ë¯€ë¡œ.
                               continue;
-                            if ((SBOX[5][R12S6_input2 ^ R12S6_key] & 0x0A) != ((int)I12_input2[20] << 3 | (int)I12_input2[22] << 1)) // °¡¿îµ¥ µÎ bit´Â unknownÀÌ¹Ç·Î.
+                            if ((SBOX[5][R12S6_input2 ^ R12S6_key] & 0x0A) != ((int)I12_input2[20] << 3 | (int)I12_input2[22] << 1)) // ê°€ìš´ë° ë‘ bitëŠ” unknownì´ë¯€ë¡œ.
                               continue;
                             int t = SBOX[5][R12S6_input1 ^ R12S6_key];
                             I12_input1[21] = (t & 0x04) >> 2;
@@ -437,8 +437,8 @@ int DC_structure(unsigned int* key) {
                             t = SBOX[5][R12S6_input2 ^ R12S6_key];
                             I12_input2[21] = (t & 0x04) >> 2;
                             I12_input2[23] = t & 0x01;
-                            // Round12 S7¿¡¼­ keybit(36 41 31 48 54 45)À» ÅÃÇÏ°í output value¸¦ ÃæÁ·ÇÏ´ÂÁö È®ÀÎ
-                            // output bit´Â 24 25 26 27ÀÌ°í 24 25 27Àº °ªÀ» ¾Ë°íÀÖÀ½ 
+                            // Round12 S7ì—ì„œ keybit(36 41 31 48 54 45)ì„ íƒí•˜ê³  output valueë¥¼ ì¶©ì¡±í•˜ëŠ”ì§€ í™•ì¸
+                            // output bitëŠ” 24 25 26 27ì´ê³  24 25 27ì€ ê°’ì„ ì•Œê³ ìˆìŒ 
                             for (int r12s7 = 0; r12s7 < 64; r12s7++) {
                               keybit[36] = (r12s7 & 0x20) >> 5;
                               keybit[41] = (r12s7 & 0x10) >> 4;
@@ -449,16 +449,16 @@ int DC_structure(unsigned int* key) {
                               int R12S7_key = r12s7;
                               int R12S7_input1 = getSboxInputBit(T[idx0], 7, 1);
                               int R12S7_input2 = getSboxInputBit(T_bar[idx1], 7, 1);
-                              if ((SBOX[6][R12S7_input1 ^ R12S7_key] & 0x0D) != ((int)I12_input1[24] << 3 | (int)I12_input1[25] << 2 | (int)I12_input1[27])) // °¡¿îµ¥ ÇÑ bit´Â unknownÀÌ¹Ç·Î.
+                              if ((SBOX[6][R12S7_input1 ^ R12S7_key] & 0x0D) != ((int)I12_input1[24] << 3 | (int)I12_input1[25] << 2 | (int)I12_input1[27])) // ê°€ìš´ë° í•œ bitëŠ” unknownì´ë¯€ë¡œ.
                                 continue;
-                              if ((SBOX[6][R12S7_input2 ^ R12S7_key] & 0x0D) != ((int)I12_input2[24] << 3 | (int)I12_input2[25] << 2 | (int)I12_input2[27])) // °¡¿îµ¥ ÇÑ bit´Â unknownÀÌ¹Ç·Î.
+                              if ((SBOX[6][R12S7_input2 ^ R12S7_key] & 0x0D) != ((int)I12_input2[24] << 3 | (int)I12_input2[25] << 2 | (int)I12_input2[27])) // ê°€ìš´ë° í•œ bitëŠ” unknownì´ë¯€ë¡œ.
                                 continue;
                               int t = SBOX[6][R12S7_input1 ^ R12S7_key];
                               I12_input1[26] = (t & 0x02) >> 1;
                               t = SBOX[6][R12S7_input2 ^ R12S7_key];
                               I12_input2[26] = (t & 0x02) >> 1;
-                              // Round12 S8¿¡¼­ keybit(38 34 42 28 49 52)À» ÅÃÇÏ°í output value¸¦ ÃæÁ·ÇÏ´ÂÁö È®ÀÎ
-                              // output bit´Â 28 29 30 31ÀÌ°í 28Àº °ªÀ» ¾Ë°íÀÖÀ½ 
+                              // Round12 S8ì—ì„œ keybit(38 34 42 28 49 52)ì„ íƒí•˜ê³  output valueë¥¼ ì¶©ì¡±í•˜ëŠ”ì§€ í™•ì¸
+                              // output bitëŠ” 28 29 30 31ì´ê³  28ì€ ê°’ì„ ì•Œê³ ìˆìŒ 
                               for (int r12s8 = 0; r12s8 < 64; r12s8++) {
                                 keybit[38] = (r12s8 & 0x20) >> 5;
                                 keybit[34] = (r12s8 & 0x10) >> 4;
@@ -469,9 +469,9 @@ int DC_structure(unsigned int* key) {
                                 int R12S8_key = r12s8;
                                 int R12S8_input1 = getSboxInputBit(T[idx0], 8, 1);
                                 int R12S8_input2 = getSboxInputBit(T_bar[idx1], 8, 1);
-                                if ((SBOX[7][R12S8_input1 ^ R12S8_key] & 0x08) != ((int)I12_input1[28] << 3)) // °¡¿îµ¥ ÇÑ bit´Â unknownÀÌ¹Ç·Î.
+                                if ((SBOX[7][R12S8_input1 ^ R12S8_key] & 0x08) != ((int)I12_input1[28] << 3)) // ê°€ìš´ë° í•œ bitëŠ” unknownì´ë¯€ë¡œ.
                                   continue;
-                                if ((SBOX[7][R12S8_input2 ^ R12S8_key] & 0x08) != ((int)I12_input2[28] << 3)) // °¡¿îµ¥ ÇÑ bit´Â unknownÀÌ¹Ç·Î.
+                                if ((SBOX[7][R12S8_input2 ^ R12S8_key] & 0x08) != ((int)I12_input2[28] << 3)) // ê°€ìš´ë° í•œ bitëŠ” unknownì´ë¯€ë¡œ.
                                   continue;
                                 int t = SBOX[7][R12S8_input1 ^ R12S8_key];
                                 I12_input1[29] = (t & 0x04) >> 2;
@@ -496,9 +496,9 @@ int DC_structure(unsigned int* key) {
                                   I12_input2[4 * i + 2] = (t & 0x02) >> 1;
                                   I12_input2[4 * i + 3] = t & 0x01;
                                 }
-                                // ÇöÀç R12¸¦ ÅëÇØ I12_input1, I12_input2¸¦ ÀüºÎ º¹¿øÇß°í key´Â 30 35 46 55 bit¸¦ Á¦¿ÜÇÏ°í ÀüºÎ º¹¿øÇß´Ù.
-                                // ÀÌÁ¦ 4bit´Â Àü¼öÁ¶»ç¸¦ ÅëÇØ right keyÀÎÁö ¾Ë¾Æ³¾ °ÍÀÌ´Ù.
-                                // right keyÀÎÁö ¾Ë¾Æ³»´Â ¹æ¹ıÀº CPA È¯°æÀÌ¹Ç·Î ±×³É ½ÇÁ¦·Î ¾ÏÈ£È­¸¦ ÇÑ ¹ø ¼öÇàÇÏ±â¸¸ ÇÏ¸é µÈ´Ù.
+                                // í˜„ì¬ R12ë¥¼ í†µí•´ I12_input1, I12_input2ë¥¼ ì „ë¶€ ë³µì›í–ˆê³  keyëŠ” 30 35 46 55 bitë¥¼ ì œì™¸í•˜ê³  ì „ë¶€ ë³µì›í–ˆë‹¤.
+                                // ì´ì œ 4bitëŠ” ì „ìˆ˜ì¡°ì‚¬ë¥¼ í†µí•´ right keyì¸ì§€ ì•Œì•„ë‚¼ ê²ƒì´ë‹¤.
+                                // right keyì¸ì§€ ì•Œì•„ë‚´ëŠ” ë°©ë²•ì€ CPA í™˜ê²½ì´ë¯€ë¡œ ê·¸ëƒ¥ ì‹¤ì œë¡œ ì•”í˜¸í™”ë¥¼ í•œ ë²ˆ ìˆ˜í–‰í•˜ê¸°ë§Œ í•˜ë©´ ëœë‹¤.
                                 for (int key_brute = 0; key_brute < 16; key_brute++) {
                                   keybit[30] = (key_brute & 0x08) >> 3;
                                   keybit[35] = (key_brute & 0x04) >> 2;
@@ -565,7 +565,7 @@ int main(void)
   byte KEY[8] = { 0xA2, 0x16, 0x40, 0xC2, 0x4E, 0x18, 0x54, 0x06};
   unsigned int key[32];
   printf("Set random key.. ");
-  setRandomKey(KEY); // CPA È¯°æ¿¡¼­ ÀÌ KEY¸¦ Ã£¾Æ³»´Â °ÍÀÌ ¸ñÇ¥ÀÓ
+  setRandomKey(KEY); // CPA í™˜ê²½ì—ì„œ ì´ KEYë¥¼ ì°¾ì•„ë‚´ëŠ” ê²ƒì´ ëª©í‘œì„
   printKey(KEY);
   des_key_setup(KEY, key);
   setDiffTable();
@@ -573,7 +573,7 @@ int main(void)
   DES(key, NullPlain, CipherOfNULLPlain);
   printf("Cipher of NULL Plaintext : ");
   print_8byte(CipherOfNULLPlain);
-  // 10000°³ÀÇ structure¿¡ 400°³ pair
+  // 10000ê°œì˜ structureì— 400ê°œ pair
   for (long long T = 1; ; T++) {
     if(T % 100 == 0)
       printf("=============%d-th structure try==============\n", T);
